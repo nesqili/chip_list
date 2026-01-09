@@ -21,6 +21,9 @@ const useChipStore = create((set, get) => ({
   allTags: [],
   allCompanies: [],
   maxAiPerformance: 5000,
+  
+  // 新增：筛选视图管理
+  filterViews: [],
 
   initializeData: async () => {
     set({ loading: true });
@@ -43,8 +46,12 @@ const useChipStore = create((set, get) => ({
         loading: false 
       });
       
+      // 初始化时加载所有辅助数据
       get().extractMetadata();
-      get().applyFilters(); // 初始化时应用一次筛选逻辑
+      get().loadSubPages();    // 加载标签组合视图
+      get().loadFilterViews(); // 加载综合筛选视图
+      get().applyFilters();    // 应用初始筛选
+      
     } catch (error) {
       console.error('初始化数据失败:', error);
       set({ loading: false });
@@ -302,6 +309,73 @@ const useChipStore = create((set, get) => ({
       console.error('加载子页面失败:', error);
       set({ subPages: [] });
     }
+  },
+
+  // --- 筛选视图管理 ---
+
+  loadFilterViews: () => {
+    try {
+      const saved = localStorage.getItem('chipFilterViews');
+      const filterViews = saved ? JSON.parse(saved) : [];
+      set({ filterViews });
+    } catch (error) {
+      console.error('加载筛选视图失败:', error);
+      set({ filterViews: [] });
+    }
+  },
+
+  saveFilterView: (name) => {
+    const { filterViews, selectedTags, tagLogic, filterCompany, filterModelKeyword, filterAiRange } = get();
+    
+    // 检查是否有筛选条件
+    const hasFilters = selectedTags.length > 0 || filterCompany || filterModelKeyword || 
+                       (filterAiRange[0] !== 0 || filterAiRange[1] !== get().maxAiPerformance);
+    
+    if (!hasFilters) {
+      return { success: false, message: '当前没有任何筛选条件' };
+    }
+    
+    const newFilterView = {
+      id: `filter-view-${Date.now()}`,
+      name,
+      selectedTags,
+      tagLogic,
+      filterCompany,
+      filterModelKeyword,
+      filterAiRange,
+      createdAt: new Date().toISOString()
+    };
+    
+    // 确保更新的是最新状态
+    const updatedFilterViews = [...filterViews, newFilterView];
+    set({ filterViews: updatedFilterViews });
+    
+    // 同步到 localStorage
+    try {
+      localStorage.setItem('chipFilterViews', JSON.stringify(updatedFilterViews));
+    } catch (e) {
+      console.error('保存筛选视图到本地存储失败', e);
+    }
+    
+    return { success: true, message: '筛选视图已保存' };
+  },
+
+  loadFilterView: (filterView) => {
+    set({ 
+      selectedTags: filterView.selectedTags || [],
+      tagLogic: filterView.tagLogic || 'or',
+      filterCompany: filterView.filterCompany || null,
+      filterModelKeyword: filterView.filterModelKeyword || '',
+      filterAiRange: filterView.filterAiRange || [0, get().maxAiPerformance]
+    });
+    get().applyFilters();
+  },
+
+  deleteFilterView: (filterViewId) => {
+    const { filterViews } = get();
+    const updatedFilterViews = filterViews.filter(view => view.id !== filterViewId);
+    set({ filterViews: updatedFilterViews });
+    localStorage.setItem('chipFilterViews', JSON.stringify(updatedFilterViews));
   },
 
   saveSubPage: (name, tags, logic) => {

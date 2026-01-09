@@ -1,6 +1,6 @@
-import React from 'react';
-import { Card, Select, Input, Button, Space, Row, Col, Typography, InputNumber } from 'antd';
-import { SearchOutlined, ReloadOutlined, FilterOutlined, RocketOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
+import { Card, Select, Input, Button, Space, Row, Col, Typography, InputNumber, Modal, message } from 'antd';
+import { SearchOutlined, ReloadOutlined, FilterOutlined, RocketOutlined, SaveOutlined } from '@ant-design/icons';
 import useChipStore from '../stores/chipStore';
 
 const { Text } = Typography;
@@ -16,8 +16,14 @@ const FilterBar = () => {
     filterAiRange,
     setFilterAiRange,
     resetFilter,
-    filteredChips
+    filteredChips,
+    selectedTags,
+    tagLogic,
+    saveFilterView
   } = useChipStore();
+
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [viewName, setViewName] = useState('');
 
   const handleAiMinChange = (value) => {
     const minValue = value || 0;
@@ -27,6 +33,35 @@ const FilterBar = () => {
   const handleAiMaxChange = (value) => {
     const maxValue = value || maxAiPerformance;
     setFilterAiRange([filterAiRange[0], maxValue]);
+  };
+
+  const handleSaveFilterView = () => {
+    if (!viewName.trim()) {
+      message.warning('请输入筛选视图名称');
+      return;
+    }
+    
+    const result = saveFilterView(viewName);
+    if (result.success) {
+      message.success(result.message);
+      setViewName('');
+      setIsModalVisible(false);
+    } else {
+      message.warning(result.message);
+    }
+  };
+
+  const handleOpenSaveModal = () => {
+    // 检查是否有筛选条件
+    const hasFilters = selectedTags.length > 0 || filterCompany || filterModelKeyword || 
+                       (filterAiRange[0] !== 0 || filterAiRange[1] !== maxAiPerformance);
+    
+    if (!hasFilters) {
+      message.warning('当前没有任何筛选条件，请先设置筛选条件');
+      return;
+    }
+    
+    setIsModalVisible(true);
   };
 
   const companyOptions = allCompanies.map(c => ({ label: c, value: c }));
@@ -140,25 +175,119 @@ const FilterBar = () => {
             </Col>
 
             <Col xs={24} sm={24} md={4} style={{ textAlign: 'right' }}>
-               <Button 
-                 icon={<ReloadOutlined />} 
-                 onClick={resetFilter}
-                 block
-                 style={{ 
-                   marginTop: 26, 
-                   height: 34, 
-                   borderRadius: 6,
-                   color: '#334155',
-                   borderColor: '#cbd5e1',
-                   fontWeight: 500
-                 }}
-               >
-                 重置
-               </Button>
+              <Space size={8} style={{ width: '100%', marginTop: 26 }}>
+                <Button 
+                  icon={<SaveOutlined />} 
+                  onClick={handleOpenSaveModal}
+                  style={{ 
+                    height: 34, 
+                    borderRadius: 6,
+                    color: '#2563eb',
+                    borderColor: '#93c5fd',
+                    background: '#eff6ff',
+                    fontWeight: 500,
+                    flex: 1
+                  }}
+                >
+                  保存视图
+                </Button>
+                <Button 
+                  icon={<ReloadOutlined />} 
+                  onClick={resetFilter}
+                  style={{ 
+                    height: 34, 
+                    borderRadius: 6,
+                    color: '#334155',
+                    borderColor: '#cbd5e1',
+                    fontWeight: 500,
+                    flex: 1
+                  }}
+                >
+                  重置
+                </Button>
+              </Space>
             </Col>
           </Row>
         </Col>
       </Row>
+
+      <Modal
+        title={
+          <Space>
+            <SaveOutlined style={{ color: '#2563eb' }} />
+            <span style={{ fontWeight: 600, color: '#0f172a' }}>保存筛选视图</span>
+          </Space>
+        }
+        open={isModalVisible}
+        onOk={handleSaveFilterView}
+        onCancel={() => {
+          setIsModalVisible(false);
+          setViewName('');
+        }}
+        okText="保存"
+        cancelText="取消"
+        centered
+        width={420}
+        okButtonProps={{ 
+          style: { 
+            background: '#2563eb', 
+            borderColor: '#2563eb',
+            fontWeight: 500
+          } 
+        }}
+      >
+        <Space direction="vertical" style={{ width: '100%', marginTop: 20 }} size="large">
+          <div>
+            <div style={{ marginBottom: 8, fontWeight: 500, color: '#334155' }}>视图名称</div>
+            <Input
+              placeholder="例如：高算力AI芯片、NVIDIA筛选..."
+              value={viewName}
+              onChange={(e) => setViewName(e.target.value)}
+              maxLength={30}
+              autoFocus
+              size="large"
+              onPressEnter={handleSaveFilterView}
+            />
+          </div>
+          
+          <div style={{ 
+            background: '#f8fafc', 
+            padding: 16, 
+            borderRadius: 8, 
+            border: '1px solid #e2e8f0' 
+          }}>
+            <div style={{ marginBottom: 12, fontSize: 13, color: '#64748b', fontWeight: 500 }}>
+              当前筛选条件：
+            </div>
+            <Space direction="vertical" size={8} style={{ width: '100%' }}>
+              {filterCompany && (
+                <div style={{ fontSize: 12, color: '#334155' }}>
+                  <span style={{ color: '#64748b' }}>芯片厂商：</span>
+                  <span style={{ fontWeight: 600 }}>{filterCompany}</span>
+                </div>
+              )}
+              {filterModelKeyword && (
+                <div style={{ fontSize: 12, color: '#334155' }}>
+                  <span style={{ color: '#64748b' }}>型号关键词：</span>
+                  <span style={{ fontWeight: 600 }}>{filterModelKeyword}</span>
+                </div>
+              )}
+              {(filterAiRange[0] !== 0 || filterAiRange[1] !== maxAiPerformance) && (
+                <div style={{ fontSize: 12, color: '#334155' }}>
+                  <span style={{ color: '#64748b' }}>AI算力范围：</span>
+                  <span style={{ fontWeight: 600 }}>{filterAiRange[0]} - {filterAiRange[1]} TOPS</span>
+                </div>
+              )}
+              {selectedTags && selectedTags.length > 0 && (
+                <div style={{ fontSize: 12, color: '#334155' }}>
+                  <span style={{ color: '#64748b' }}>标签筛选（{tagLogic === 'and' ? 'AND' : 'OR'}）：</span>
+                  <span style={{ fontWeight: 600 }}>{selectedTags.join(', ')}</span>
+                </div>
+              )}
+            </Space>
+          </div>
+        </Space>
+      </Modal>
     </Card>
   );
 };
