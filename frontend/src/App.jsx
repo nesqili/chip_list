@@ -115,7 +115,7 @@ const App = () => {
                   letterSpacing: '-0.5px',
                 }}
               >
-                芯片规格数据库 <span style={{ opacity: 0.8, fontSize: '14px', fontWeight: 400 }}>By HAISNAP</span>
+                芯片规格数据库 <span style={{ opacity: 0.8, fontSize: '14px', fontWeight: 400 }}>By LFNN</span>
               </h1>
             </div>
           </div>
