@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
-import { ConfigProvider, Layout, Space, FloatButton, theme } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { ConfigProvider, Layout, Space, FloatButton, theme, Button } from 'antd';
+import { MenuUnfoldOutlined, MenuFoldOutlined } from '@ant-design/icons';
 import zhCN from 'antd/locale/zh_CN';
 import ChipTable from './components/ChipTable';
 import TagFilter from './components/TagFilter';
@@ -11,6 +12,7 @@ const { Header, Content, Sider } = Layout;
 
 const App = () => {
   const { initializeData } = useChipStore();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     const loadFont = () => {
@@ -77,63 +79,78 @@ const App = () => {
             height: '64px',
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div
-              style={{
-                width: '36px',
-                height: '36px',
-                background: 'rgba(255,255,255,0.2)',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '20px',
-              }}
-            >
-              💾
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', width: '100%', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Button
+                type="text"
+                icon={sidebarCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                style={{
+                  fontSize: '18px',
+                  color: '#fff',
+                  width: 40,
+                  height: 40,
+                }}
+              />
+              <div
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  background: 'rgba(255,255,255,0.2)',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '20px',
+                }}
+              >
+                💾
+              </div>
+              <h1
+                style={{
+                  color: '#fff',
+                  margin: 0,
+                  fontSize: '20px',
+                  fontWeight: 700,
+                  letterSpacing: '-0.5px',
+                }}
+              >
+                芯片规格数据库 <span style={{ opacity: 0.8, fontSize: '14px', fontWeight: 400 }}>By HAISNAP</span>
+              </h1>
             </div>
-            <h1
-              style={{
-                color: '#fff',
-                margin: 0,
-                fontSize: '20px',
-                fontWeight: 700,
-                letterSpacing: '-0.5px',
-              }}
-            >
-              芯片规格数据库 <span style={{ opacity: 0.8, fontSize: '14px', fontWeight: 400 }}>By HAISNAP</span>
-            </h1>
           </div>
         </Header>
 
         <Layout>
-          <Sider
-            width={320}
-            theme="light"
-            breakpoint="lg"
-            collapsedWidth="0"
-            style={{
-              overflowY: 'auto',
-              height: 'calc(100vh - 64px)',
-              position: 'fixed',
-              left: 0,
-              top: 64,
-              bottom: 0,
-              zIndex: 900,
-              boxShadow: '2px 0 8px rgba(0,0,0,0.05)',
-              borderRight: '1px solid #e2e8f0'
-            }}
-          >
-            <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* 标签筛选移至左侧目录上方 */}
-              <div style={{ transform: 'scale(1)', transformOrigin: 'top left' }}>
-                <TagFilter />
+          {!sidebarCollapsed && (
+            <Sider
+              width={320}
+              theme="light"
+              breakpoint="lg"
+              collapsedWidth="0"
+              style={{
+                overflowY: 'auto',
+                height: 'calc(100vh - 64px)',
+                position: 'fixed',
+                left: 0,
+                top: 64,
+                bottom: 0,
+                zIndex: 900,
+                boxShadow: '2px 0 8px rgba(0,0,0,0.05)',
+                borderRight: '1px solid #e2e8f0'
+              }}
+            >
+              <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* 标签筛选移至左侧目录上方 */}
+                <div style={{ transform: 'scale(1)', transformOrigin: 'top left' }}>
+                  <TagFilter />
+                </div>
+                <SubPageManager />
               </div>
-              <SubPageManager />
-            </div>
-          </Sider>
+            </Sider>
+          )}
 
-          <Layout style={{ marginLeft: 320, padding: '24px', transition: 'all 0.2s' }}>
+          <Layout style={{ marginLeft: sidebarCollapsed ? 0 : 320, padding: '24px', transition: 'all 0.3s ease' }}>
             <Content style={{ maxWidth: '1600px', margin: '0 auto', width: '100%' }}>
               <Space direction="vertical" size="middle" style={{ width: '100%' }}>
                 <FilterBar />
@@ -206,6 +223,9 @@ const App = () => {
         @media (max-width: 992px) {
           .ant-layout {
             margin-left: 0 !important;
+          }
+          .ant-layout-sider {
+            display: none !important;
           }
         }
       `}</style>

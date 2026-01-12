@@ -18,10 +18,12 @@
     "antd": "^5.0.0",
     "axios": "^1.6.2",
     "chart.js": "latest",
+    "quill": "^1.3.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-dropzone": "latest",
     "react-icons": "latest",
+    "react-quill": "^2.0.0",
     "react-redux": "^8.1.3",
     "react-router-dom": "^6.22.3",
     "socket.io-client": "^4.7.5",
@@ -33,6 +35,6 @@
     "@babel/preset-react": "latest",
     "@vitejs/plugin-react": "latest",
     "vite": "^5.4.0",
-    "zustand": "^5.0.9"
+    "zustand": "^5"
   }
 }

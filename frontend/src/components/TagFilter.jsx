@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Select, Radio, Button, Space, Tag, Empty } from 'antd';
-import { FilterOutlined, ClearOutlined, PlusOutlined } from '@ant-design/icons';
+import { FilterOutlined, ClearOutlined, UpOutlined, DownOutlined } from '@ant-design/icons';
 import useChipStore from '../stores/chipStore';
 
 const TagFilter = () => {
   const [localSelectedTags, setLocalSelectedTags] = useState([]);
   const [localLogic, setLocalLogic] = useState('or');
+  const [collapsed, setCollapsed] = useState(false);
   
   const { 
     allTags, 
@@ -50,21 +51,31 @@ const TagFilter = () => {
   return (
     <Card 
       title={
-        <Space>
-          <FilterOutlined />
-          <span>标签筛选</span>
+        <Space style={{ width: '100%', justifyContent: 'space-between' }}>
+          <Space>
+            <FilterOutlined />
+            <span>标签筛选</span>
+          </Space>
+          <Button
+            type="text"
+            size="small"
+            icon={collapsed ? <DownOutlined /> : <UpOutlined />}
+            onClick={() => setCollapsed(!collapsed)}
+            style={{ color: '#64748b' }}
+          >
+            {collapsed ? '展开' : '收起'}
+          </Button>
         </Space>
       }
       style={{ marginBottom: 16 }}
       extra={
-        <Space>
-          <Tag color="blue">
-            共 {filteredChips?.length || 0} / {chips?.length || 0} 条数据
-          </Tag>
-        </Space>
+        <Tag color="blue" style={{ marginRight: 0 }}>
+          共 {filteredChips?.length || 0} / {chips?.length || 0} 条数据
+        </Tag>
       }
     >
-      <Space direction="vertical" style={{ width: '100%' }} size="middle">
+      {!collapsed && (
+        <Space direction="vertical" style={{ width: '100%' }} size="middle">
         <div>
           <div style={{ marginBottom: 8, fontWeight: 500 }}>选择标签：</div>
           <Select
@@ -158,6 +169,7 @@ const TagFilter = () => {
           </div>
         )}
       </Space>
+      )}
     </Card>
   );
 };

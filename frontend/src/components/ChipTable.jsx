@@ -4,6 +4,7 @@ import { EditOutlined, DeleteOutlined, SearchOutlined, PlusOutlined, CopyOutline
 import useChipStore from '../stores/chipStore';
 import AddChipModal from './AddChipModal';
 import EditChipModal from './EditChipModal';
+import ChipDetailModal from './ChipDetailModal';
 import ImportExport from './ImportExport';
 
 const ResizableTitle = (props) => {
@@ -61,6 +62,7 @@ const ResizableTitle = (props) => {
 const ChipTable = () => {
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [currentChip, setCurrentChip] = useState(null);
   const [searchText, setSearchText] = useState('');
   const [searchedColumn, setSearchedColumn] = useState('');
@@ -90,6 +92,11 @@ const ChipTable = () => {
   const handleEdit = (record) => {
     setCurrentChip(record);
     setEditModalVisible(true);
+  };
+
+  const handleViewDetail = (record) => {
+    setCurrentChip(record);
+    setDetailModalVisible(true);
   };
 
   const handleDelete = (chipId) => {
@@ -345,6 +352,14 @@ const ChipTable = () => {
       fixed: 'right',
       render: (_, record) => (
         <Space size={0}>
+          <Tooltip title="详细介绍">
+            <Button 
+              type="link" 
+              icon={<i className="anticon" style={{ fontSize: '14px' }}>📄</i>}
+              onClick={() => handleViewDetail(record)} 
+              style={{ color: '#7c3aed' }}
+            />
+          </Tooltip>
           <Tooltip title="编辑">
             <Button 
               type="link" 
@@ -476,6 +491,14 @@ const ChipTable = () => {
         visible={editModalVisible}
         onClose={() => {
           setEditModalVisible(false);
+          setCurrentChip(null);
+        }}
+        chipData={currentChip}
+      />
+      <ChipDetailModal
+        visible={detailModalVisible}
+        onClose={() => {
+          setDetailModalVisible(false);
           setCurrentChip(null);
         }}
         chipData={currentChip}

@@ -24,6 +24,9 @@ const useChipStore = create((set, get) => ({
   
   // 新增：筛选视图管理
   filterViews: [],
+  
+  // 新增：芯片详细介绍内容存储（chipId => HTML内容）
+  chipDetails: {},
 
   initializeData: async () => {
     set({ loading: true });
@@ -50,6 +53,7 @@ const useChipStore = create((set, get) => ({
       get().extractMetadata();
       get().loadSubPages();    // 加载标签组合视图
       get().loadFilterViews(); // 加载综合筛选视图
+      get().loadChipDetails(); // 加载芯片详细介绍
       get().applyFilters();    // 应用初始筛选
       
     } catch (error) {
@@ -124,6 +128,8 @@ const useChipStore = create((set, get) => ({
     const updatedChips = chips.filter(chip => chip.id !== chipId);
     set({ chips: updatedChips });
     saveChipData(updatedChips);
+    // 同步删除对应的详细介绍
+    get().deleteChipDetail(chipId);
     get().extractMetadata();
     get().applyFilters();
   },
@@ -140,6 +146,12 @@ const useChipStore = create((set, get) => ({
     // 更新数据并清空选中状态
     set({ chips: updatedChips, selectedRowKeys: [] });
     saveChipData(updatedChips);
+    
+    // 批量删除对应的详细介绍
+    chipIds.forEach(chipId => {
+      get().deleteChipDetail(chipId);
+    });
+    
     get().extractMetadata();
     get().applyFilters();
     
@@ -490,6 +502,76 @@ const useChipStore = create((set, get) => ({
     get().applyFilters();
     
     return { success: true, duplicate: false };
+  },
+
+  // --- 芯片详细介绍管理 ---
+
+  // 加载芯片详细介绍数据
+  loadChipDetails: () => {
+    try {
+      const saved = localStorage.getItem('chipDetails');
+      const chipDetails = saved ? JSON.parse(saved) : {};
+      set({ chipDetails });
+    } catch (error) {
+      console.error('加载芯片详细介绍失败:', error);
+      set({ chipDetails: {} });
+    }
+  },
+
+  // 保存芯片详细介绍
+  saveChipDetail: (chipId, detailContent) => {
+    if (!chipId) {
+      console.error('保存失败：chipId 不能为空');
+      return { success: false, message: '芯片ID无效' };
+    }
+    
+    const { chipDetails } = get();
+    // 确保内容为字符串类型，支持富文本 HTML
+    const sanitizedContent = typeof detailContent === 'string' ? detailContent : String(detailContent || '');
+    
+    const updatedDetails = {
+      ...chipDetails,
+      [chipId]: sanitizedContent
+    };
+    set({ chipDetails: updatedDetails });
+    
+    try {
+      const serializedData = JSON.stringify(updatedDetails);
+      // 检查存储大小（localStorage 限制约 5-10MB）
+      if (serializedData.length > 5 * 1024 * 1024) {
+        console.warn('详细介绍内容过大，可能超出本地存储限制');
+      }
+      localStorage.setItem('chipDetails', serializedData);
+      console.log(`[详细介绍] 已保存芯片 ${chipId} 的详细介绍，内容长度: ${sanitizedContent.length} 字符`);
+      return { success: true, message: '详细介绍已保存' };
+    } catch (error) {
+      console.error('保存芯片详细介绍到本地存储失败:', error);
+      // 如果是 QuotaExceededError，提示用户
+      if (error.name === 'QuotaExceededError') {
+        return { success: false, message: '存储空间不足，请删除部分内容后重试' };
+      }
+      return { success: false, message: '保存失败，请重试' };
+    }
+  },
+
+  // 获取指定芯片的详细介绍
+  getChipDetail: (chipId) => {
+    const { chipDetails } = get();
+    return chipDetails[chipId] || '';
+  },
+
+  // 删除芯片详细介绍
+  deleteChipDetail: (chipId) => {
+    const { chipDetails } = get();
+    const updatedDetails = { ...chipDetails };
+    delete updatedDetails[chipId];
+    set({ chipDetails: updatedDetails });
+    
+    try {
+      localStorage.setItem('chipDetails', JSON.stringify(updatedDetails));
+    } catch (error) {
+      console.error('删除芯片详细介绍失败:', error);
+    }
   }
 }));
 

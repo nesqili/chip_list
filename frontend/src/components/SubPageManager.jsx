@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { List, Button, Modal, Input, Space, Tag, message, Popconfirm, Typography, Tooltip, Divider, Empty } from 'antd';
-import { PlusOutlined, DeleteOutlined, SaveOutlined, AppstoreOutlined, RightOutlined, FilterOutlined, TagOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, SaveOutlined, AppstoreOutlined, RightOutlined, FilterOutlined, TagOutlined, MenuFoldOutlined } from '@ant-design/icons';
 import useChipStore from '../stores/chipStore';
 
 const { Text } = Typography;
 
-const SubPageManager = () => {
+const SubPageManager = ({ onCollapse }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [pageName, setPageName] = useState('');
   
@@ -107,9 +107,22 @@ const SubPageManager = () => {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       {/* 头部操作区 */}
       <div style={{ marginBottom: 16 }}>
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
-          <AppstoreOutlined style={{ fontSize: '18px', marginRight: 8, color: '#2563eb' }} />
-          <Text strong style={{ fontSize: '16px', color: '#0f172a' }}>我的视图</Text>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <Space>
+            <AppstoreOutlined style={{ fontSize: '18px', color: '#2563eb' }} />
+            <Text strong style={{ fontSize: '16px', color: '#0f172a' }}>我的视图</Text>
+          </Space>
+          {onCollapse && (
+            <Tooltip title="隐藏侧边栏">
+              <Button
+                type="text"
+                size="small"
+                icon={<MenuFoldOutlined />}
+                onClick={onCollapse}
+                style={{ color: '#64748b' }}
+              />
+            </Tooltip>
+          )}
         </div>
         <Button 
           type="primary" 
